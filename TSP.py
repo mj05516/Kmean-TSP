@@ -150,7 +150,8 @@ def readfile(filename):
 def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration):
     best_per_iter = []
     avg_per_iter = []
-
+    optimal_route = []
+    optimal_score = 999**999
     for j in range(no_iteration):
         population = []
         best_so_far = []
@@ -178,6 +179,11 @@ def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
         
             population = random_selection(population, pop_size, False)
 
+            for x in population:
+                if x.fitness < optimal_score:
+                    optimal_score = x.fitness
+                    optimal_route = x.sequence.copy()
+
             best_so_far.append(min([population[x].fitness for x in range(len(population))]))
             avg_so_far.append(sum([population[x].fitness for x in range(len(population))])/len(population))
 
@@ -199,7 +205,7 @@ def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
     plt.title("TSP EA:\n Truncation Selection and Random Selection")
     plt.legend()
     plt.show()
-    return 
+    return optimal_route
 
 def filter_nodes(node_lst, region):
     lst = []
@@ -215,15 +221,13 @@ def filter_nodes(node_lst, region):
 
 def main():
     K = 3
-    N = 5
-    count = 0
-    cluster_lst = ['*']*K
+    N = 10
+    cluster_lst = []
     region_node_lst = []
     points = initializePoints('qa194.tsp')
     clusters = keepClustering(points, K, N, False)
     for x in clusters[0].keys():
-        cluster_lst[count] = clusters[0][x]
-        count += 1
+        cluster_lst.append(clusters[0][x])
     
     dict = makedic("qa194.tsp")
     for x in range(len(cluster_lst)):
@@ -236,9 +240,12 @@ def main():
     no_generations = 1000
     mut_rate = 0.3
     no_iteration = 1
-    TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
-    TSP_EA(filter_lst[1], pop_size, off_size, no_generations, mut_rate, no_iteration)
-    TSP_EA(filter_lst[2], pop_size, off_size, no_generations, mut_rate, no_iteration)
+    a = TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
+
+    for x in a:
+        print(x.id, end=" ")
+    # TSP_EA(filter_lst[1], pop_size, off_size, no_generations, mut_rate, no_iteration)
+    # TSP_EA(filter_lst[2], pop_size, off_size, no_generations, mut_rate, no_iteration)
 
 if __name__ == "__main__":
     main()
