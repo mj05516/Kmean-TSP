@@ -25,7 +25,6 @@ def make_random_center(points, k):
         centroids[(x[0],x[1])] = []
     return centroids
 
-
 def point_clustering(points, centroids):
     for point in points:
         nearest_dist_from_ref = 999**999
@@ -37,7 +36,6 @@ def point_clustering(points, centroids):
                 centro_point = i
         centroids[centro_point].append(point)
     return centroids
-
 
 def mean_center(centroids):
     new_centers = {}
@@ -54,7 +52,6 @@ def mean_center(centroids):
             visualize(centroids, 404)
     return new_centers
 
-
 def clusterQuality(clusters):
     score = -1
     for x in clusters.keys():
@@ -62,7 +59,6 @@ def clusterQuality(clusters):
             score += (x[0] - y[0])**2 + (x[1] - y[1])**2
 
     return score
-
 
 def cluster(points,K,visuals = True):
     clusters=[]
@@ -83,7 +79,6 @@ def cluster(points,K,visuals = True):
     
     return data_cluster
 
-
 def visualize(clustered_data, Iteration):
     plotx = []
     ploty = []
@@ -103,7 +98,6 @@ def visualize(clustered_data, Iteration):
     plt.title("Iteration: " + str(Iteration))
     plt.show()
 
-
 def keepClustering(points,K,N,visuals):
     clusters = []
     min = 999**999
@@ -116,7 +110,6 @@ def keepClustering(points,K,N,visuals):
             min = score
             clusters = ([data_cluster, min, x+1])
     return clusters
-
 
 def cluster_to_region(cluster, dict):
     region = []
@@ -152,6 +145,7 @@ def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
     avg_per_iter = []
     optimal_route = []
     optimal_score = 999**999
+
     for j in range(no_iteration):
         population = []
         best_so_far = []
@@ -159,30 +153,24 @@ def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
 
         for i in range(pop_size):
             random.shuffle(node_lst)
-            temp = chromosome(node_lst.copy())
-            temp.calc_fitness_tsp()
+            temp = copy.deepcopy(node_lst)
+            temp = chromosome(temp)
             population.append(temp)
-        
+
         for i in range(no_generations):
             children = []
             for x in range(off_size):
-                selected_chromosomes = truncation_selection(population, 2, True, False)
-                children.append(selected_chromosomes[0].crossover(selected_chromosomes[1]))
+                selected_chromosomes = binary_tournament_selection(population, 2, True, False)
+                temp = selected_chromosomes[0].crossover(selected_chromosomes[1])
+                children.append(temp)
 
+                # quit()
             for x in range(off_size):
                 if random.random() < mut_rate:
                     children[x].mutate()
 
-            for x in children:
-                x.fitness = x.calc_fitness_tsp()
-                population.append(x)
-        
-            population = random_selection(population, pop_size, False)
-
-            for x in population:
-                if x.fitness < optimal_score:
-                    optimal_score = x.fitness
-                    optimal_route = x.sequence.copy()
+            population = children + population
+            population = truncation_selection(population, pop_size, False, False)
 
             best_so_far.append(min([population[x].fitness for x in range(len(population))]))
             avg_so_far.append(sum([population[x].fitness for x in range(len(population))])/len(population))
@@ -196,23 +184,20 @@ def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
 
     Avg_BFS_pg = [sum([k[i] for k in best_per_iter])/no_iteration for i in range(no_generations)]
     Avg_avgfit_pg = [sum([k[i] for k in avg_per_iter])/no_iteration for i in range(no_generations)]
-    
-    plt.figure(figsize=(10,6))
-    plt.plot(range(no_generations),Avg_BFS_pg, label="Best Fitness")
-    plt.plot(range(no_generations),Avg_avgfit_pg, label="Average Fitness")
-    plt.xlabel("Number of Generations")
-    plt.ylabel("Average Value per generations\n Lower is better")
-    plt.title("TSP EA:\n Truncation Selection and Random Selection")
-    plt.legend()
-    plt.show()
-    return optimal_route
+
+    # sort the population by fitness
+    population.sort(key=lambda x: x.fitness)
+    print("Final:")
+    print(population[0].get_sequence())
+    print(population[0].fitness)
+    return 
 
 def filter_nodes(node_lst, region):
     lst = []
-    for y in range(len(region)):
+    for y in region:
         mlst = []
         for x in node_lst:
-            if x.id in region:
+            if x.id in y:
                 mlst.append(x)
         lst.append(mlst)
         mlst = []
@@ -220,8 +205,8 @@ def filter_nodes(node_lst, region):
 
 
 def main():
-    K = 3
-    N = 10
+    K = 2
+    N = 1
     cluster_lst = []
     region_node_lst = []
     points = initializePoints('qa194.tsp')
@@ -229,21 +214,31 @@ def main():
     for x in clusters[0].keys():
         cluster_lst.append(clusters[0][x])
     
-    dict = makedic("qa194.tsp")
-    for x in range(len(cluster_lst)):
-        region_node_lst.append(cluster_to_region(cluster_lst[x], dict))
+    for x in cluster_lst:
+        print(x)
 
-    node_lst = readfile("qa194.tsp")
-    filter_lst = filter_nodes(node_lst, region_node_lst[0])
-    pop_size = 100
-    off_size = 50
-    no_generations = 1000
-    mut_rate = 0.3
-    no_iteration = 1
-    a = TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
+    # dict = makedic("qa194.tsp")
+    # for x in range(len(cluster_lst)):
+    #     region_node_lst.append(cluster_to_region(cluster_lst[x], dict))
+    
+    # print(region_node_lst)
+    # for x in region_node_lst:
+    #     print(x)
 
-    for x in a:
-        print(x.id, end=" ")
+    # filter_lst = []
+    # node_lst = readfile("qa194.tsp")    
+    # filter_lst = filter_nodes(node_lst, region_node_lst)
+
+    # for x in filter_lst:
+    #     print(len(x))
+    
+    # pop_size = 110
+    # off_size = 60
+    # no_generations = 1000
+    # mut_rate = 0.7
+    # no_iteration = 1
+
+    # TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
     # TSP_EA(filter_lst[1], pop_size, off_size, no_generations, mut_rate, no_iteration)
     # TSP_EA(filter_lst[2], pop_size, off_size, no_generations, mut_rate, no_iteration)
 
