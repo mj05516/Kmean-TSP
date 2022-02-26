@@ -217,17 +217,17 @@ def main():
     for x in cluster_lst:
         print(x)
 
-    # dict = makedic("qa194.tsp")
-    # for x in range(len(cluster_lst)):
-    #     region_node_lst.append(cluster_to_region(cluster_lst[x], dict))
+    dict = makedic("qa194.tsp")
+    for x in range(len(cluster_lst)):
+        region_node_lst.append(cluster_to_region(cluster_lst[x], dict))
     
     # print(region_node_lst)
     # for x in region_node_lst:
     #     print(x)
 
-    # filter_lst = []
-    # node_lst = readfile("qa194.tsp")    
-    # filter_lst = filter_nodes(node_lst, region_node_lst)
+    filter_lst = []
+    node_lst = readfile("qa194.tsp")    
+    filter_lst = filter_nodes(node_lst, region_node_lst)
 
     # for x in filter_lst:
     #     print(len(x))

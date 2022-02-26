@@ -10,12 +10,37 @@ class TSP():
         self.best_so_far = []
         self.avg_so_far = []
         self.children = []
+        self.full_lst = []
+        self.filename = "qa194.tsp"
 
         self.mutation_rate = 0.1
         self.no_generations = 100
         self.no_iteration = 10
         self.population_size = 100
         self.off_size = 50
+
+    def readfile(self):
+        self.full_lst = []
+        with open(self.filename, "r") as f:
+            for i in range(7):
+                f.readline()
+            for line in f:
+                data = line.split()
+                if len(data) > 1:
+                    temp = node(data)
+                    self.full_lst.append(temp)
+        return self.full_lst
+
+    def filter_nodes(self, region):
+        lst = []
+        for y in region:
+            mlst = []
+            for x in self.full_lst:
+                if x.id in y:
+                    mlst.append(x)
+            lst.append(mlst)
+            mlst = []
+        return lst
 
     def generate_population(self):
         for i in range(self.generations):
@@ -50,6 +75,7 @@ class Kmean():
         self.N = n
         self.dataset = self.initializePoints(filename)
         self.cluster_lst = self.keepClustering(self.dataset, self.K, self.N, False)
+        self.region = []
 
     def initializePoints(self, filename):
         points = []
@@ -158,5 +184,22 @@ class Kmean():
         for x in clusters[0].keys():
             lst.append(clusters[0][x])
         return lst
+
+    def makeDic(self):
+        dic = {}
+        with open(self.filename, "r") as f:
+            for i in range(7):
+                f.readline()
+            for line in f:
+                data = line.split()
+                if len(data) > 1:
+                    dic[float(data[1]),float(data[2])] = int(data[0])
+        return dic
+    
+    def cord_to_region(self):
+        for x in self.cluster_lst:
+            for y in x:
+                self.region.append(y)
+        return self.region
 
 cluster = Kmean("qa194.tsp")
