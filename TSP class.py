@@ -5,45 +5,23 @@ from selection_scheme import *
 import matplotlib.pyplot as plt
 
 class TSP():
-    def __init__(self):
+    def __init__(self, filename):
         self.population = []
         self.best_so_far = []
+        self.bestpath = node([-2,-2,-2])
         self.avg_so_far = []
         self.children = []
-        self.full_lst = []
-        self.filename = "qa194.tsp"
+        self.node_lst = []
+        self.filename = filename
 
-        self.mutation_rate = 0.1
-        self.no_generations = 100
-        self.no_iteration = 10
+        self.mutation_rate = 0.7
+        self.no_generations = 1000
+        self.no_iteration = 1
         self.population_size = 100
-        self.off_size = 50
-
-    def readfile(self):
-        self.full_lst = []
-        with open(self.filename, "r") as f:
-            for i in range(7):
-                f.readline()
-            for line in f:
-                data = line.split()
-                if len(data) > 1:
-                    temp = node(data)
-                    self.full_lst.append(temp)
-        return self.full_lst
-
-    def filter_nodes(self, region):
-        lst = []
-        for y in region:
-            mlst = []
-            for x in self.full_lst:
-                if x.id in y:
-                    mlst.append(x)
-            lst.append(mlst)
-            mlst = []
-        return lst
+        self.off_size = 75
 
     def generate_population(self):
-        for i in range(self.generations):
+        for i in range(self.no_generations):
             random.shuffle(self.node_lst)
             temp = copy.deepcopy(self.node_lst)
             temp = chromosome(temp)
@@ -54,7 +32,6 @@ class TSP():
             selected_chromosomes = binary_tournament_selection(self.population, 2, True, False)
             temp = selected_chromosomes[0].crossover(selected_chromosomes[1])
             self.children.append(temp)
-        return self.children
 
     def mutate(self):
         for x in range(len(self.children)):
@@ -65,21 +42,28 @@ class TSP():
         self.population = self.population + self.children
         self.children.clear()
         self.population = truncation_selection(self.population, self.population_size, False, False)
+        
+        # sort population by fitness
+        self.population.sort(key=lambda x: x.fitness)
 
-        self.best_so_far.append(min([self.population[x].fitness for x in range(len(self.population))]))
+        self.best_so_far.append(self.population[0].fitness)
+        self.bestpath = self.population[0]
         self.avg_so_far.append(sum([self.population[x].fitness for x in range(len(self.population))])/len(self.population))
     
 class Kmean():
     def __init__(self, filename, k=3, n=1) -> None:
         self.K = k
         self.N = n
-        self.dataset = self.initializePoints(filename)
+        self.filename = filename
+        self.dataset = self.initializePoints()
         self.cluster_lst = self.keepClustering(self.dataset, self.K, self.N, False)
-        self.region = []
+        self.dict = self.makeDic()
+        self.region = self.cord_to_region()
+        
 
-    def initializePoints(self, filename):
+    def initializePoints(self, ):
         points = []
-        with open(filename, "r") as f:
+        with open(self.filename, "r") as f:
             for i in range(7):
                 f.readline()
             for line in f:
@@ -197,9 +181,104 @@ class Kmean():
         return dic
     
     def cord_to_region(self):
-        for x in self.cluster_lst:
-            for y in x:
-                self.region.append(y)
-        return self.region
+        region = []
+        lst = []
+        for i in self.cluster_lst:
+            for j in i:
+                lst.append(self.dict[j[0],j[1]])
+            region.append(lst)
+            lst = []
+        return region
+
+
+
+def readfile(filename):
+    node_lst = []
+    with open(filename, "r") as f:
+        for i in range(7):
+            f.readline()
+        for line in f:
+            data = line.split()
+            if len(data) > 1:
+                temp = node(data)
+                node_lst.append(temp)
+    return node_lst
+
+def filter_nodes(node_lst, region):
+    lst = []
+    for y in region:
+        mlst = []
+        for x in node_lst:
+            if x.id in y:
+                mlst.append(x)
+        lst.append(mlst)
+        mlst = []
+    return lst
+
 
 cluster = Kmean("qa194.tsp")
+
+filter_lst = []
+node_lst = readfile("qa194.tsp")    
+filter_lst = filter_nodes(node_lst, cluster.region)
+
+tsp1 = TSP("qa194.tsp")
+tsp2 = TSP("qa194.tsp")
+tsp3 = TSP("qa194.tsp")
+
+tsp1.node_lst = filter_lst[0]
+tsp2.node_lst = filter_lst[1]
+tsp3.node_lst = filter_lst[2]
+
+tsp1.generate_population()
+tsp2.generate_population()
+tsp3.generate_population()
+
+for i in range(tsp1.no_generations):
+    tsp1.make_children()
+    tsp1.mutate()
+    tsp1.survival_of_the_fitest()
+    print("TSP1: Generation No.: ", i+1)
+    print("Best Fitness Soo Far: ", tsp1.best_so_far[-1])
+
+for i in range(tsp2.no_generations):
+    tsp2.make_children()
+    tsp2.mutate()
+    tsp2.survival_of_the_fitest()
+    print("TSP2: Generation: ", i+1)
+    print("Best Fitness Soo Far: ", tsp2.best_so_far[-1])
+
+for i in range(tsp3.no_generations):
+    tsp3.make_children()
+    tsp3.mutate()
+    tsp3.survival_of_the_fitest()
+    print("TSP3: Generation: ", i+1)
+    print("Best Fitness Soo Far: ", tsp3.best_so_far[-1])
+
+final = TSP("qa194.tsp")
+final.node_lst = tsp1.bestpath.sequence +tsp2.bestpath.sequence + tsp3.bestpath.sequence
+final.generate_population()
+for i in range(final.no_generations):
+    final.make_children()
+    final.mutate()
+    final.survival_of_the_fitest()
+    print("Final: Generation: ", i+1)
+    print("Best Fitness Soo Far: ", final.best_so_far[-1])
+
+
+# for i in tsp1.bestpath.sequence:
+#     plt.scatter(i.x, i.y, color='red')
+# for i in tsp2.bestpath.sequence:
+#     plt.scatter(i.x, i.y, color='blue')
+# for i in tsp3.bestpath.sequence:
+#     plt.scatter(i.x, i.y, color='green')
+
+# # connect the dots in the best path
+# for i in range(len(tsp1.bestpath.sequence)-1):
+#     plt.plot([tsp1.bestpath.sequence[i].x, tsp1.bestpath.sequence[i+1].x], [tsp1.bestpath.sequence[i].y, tsp1.bestpath.sequence[i+1].y], color='red')
+# for i in range(len(tsp2.bestpath.sequence)-1):
+#     plt.plot([tsp2.bestpath.sequence[i].x, tsp2.bestpath.sequence[i+1].x], [tsp2.bestpath.sequence[i].y, tsp2.bestpath.sequence[i+1].y], color='blue')
+# for i in range(len(tsp3.bestpath.sequence)-1):
+#     plt.plot([tsp3.bestpath.sequence[i].x, tsp3.bestpath.sequence[i+1].x], [tsp3.bestpath.sequence[i].y, tsp3.bestpath.sequence[i+1].y], color='green')
+
+# plt.show()

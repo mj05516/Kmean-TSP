@@ -205,7 +205,7 @@ def filter_nodes(node_lst, region):
 
 
 def main():
-    K = 2
+    K = 3
     N = 1
     cluster_lst = []
     region_node_lst = []
@@ -214,8 +214,8 @@ def main():
     for x in clusters[0].keys():
         cluster_lst.append(clusters[0][x])
     
-    for x in cluster_lst:
-        print(x)
+    # for x in cluster_lst:
+    #     print(x)
 
     dict = makedic("qa194.tsp")
     for x in range(len(cluster_lst)):
@@ -230,15 +230,15 @@ def main():
     filter_lst = filter_nodes(node_lst, region_node_lst)
 
     # for x in filter_lst:
-    #     print(len(x))
+    #     print(x)
     
-    # pop_size = 110
-    # off_size = 60
-    # no_generations = 1000
-    # mut_rate = 0.7
-    # no_iteration = 1
+    pop_size = 110
+    off_size = 60
+    no_generations = 100
+    mut_rate = 0.7
+    no_iteration = 1
 
-    # TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
+    TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
     # TSP_EA(filter_lst[1], pop_size, off_size, no_generations, mut_rate, no_iteration)
     # TSP_EA(filter_lst[2], pop_size, off_size, no_generations, mut_rate, no_iteration)
 
