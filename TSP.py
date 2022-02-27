@@ -1,4 +1,6 @@
 from itertools import count
+
+from tqdm import tqdm
 from classes import *
 from selection_scheme import *
 import numpy as np
@@ -157,7 +159,7 @@ def TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
             temp = chromosome(temp)
             population.append(temp)
 
-        for i in range(no_generations):
+        for i in tqdm(range(no_generations)):
             children = []
             for x in range(off_size):
                 selected_chromosomes = binary_tournament_selection(population, 2, True, False)
@@ -234,11 +236,11 @@ def main():
     
     pop_size = 110
     off_size = 60
-    no_generations = 100
+    no_generations = 1000
     mut_rate = 0.7
     no_iteration = 1
 
-    TSP_EA(filter_lst[0], pop_size, off_size, no_generations, mut_rate, no_iteration)
+    TSP_EA(node_lst, pop_size, off_size, no_generations, mut_rate, no_iteration)
     # TSP_EA(filter_lst[1], pop_size, off_size, no_generations, mut_rate, no_iteration)
     # TSP_EA(filter_lst[2], pop_size, off_size, no_generations, mut_rate, no_iteration)
 

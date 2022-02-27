@@ -71,6 +71,7 @@ class chromosome:
         node1 = random.randint(0, len(self.sequence)-1)
         node2 = random.randint(0, len(self.sequence)-1)
         self.sequence[node1], self.sequence[node2] = self.sequence[node2], self.sequence[node1]
+        self.fitness = self.calc_fitness_tsp()
         return
 
     def get_sequence(self):

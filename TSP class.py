@@ -3,6 +3,8 @@ import random
 from classes import *
 from selection_scheme import *
 import matplotlib.pyplot as plt
+from itertools import permutations
+from tqdm import tqdm
 
 class TSP():
     def __init__(self, filename):
@@ -51,7 +53,7 @@ class TSP():
         self.avg_so_far.append(sum([self.population[x].fitness for x in range(len(self.population))])/len(self.population))
     
 class Kmean():
-    def __init__(self, filename, k=3, n=1) -> None:
+    def __init__(self, filename, k=3, n=10) -> None:
         self.K = k
         self.N = n
         self.filename = filename
@@ -215,70 +217,91 @@ def filter_nodes(node_lst, region):
         mlst = []
     return lst
 
+def main():
+    cluster = Kmean("qa194.tsp")
 
-cluster = Kmean("qa194.tsp")
+    filter_lst = []
+    node_lst = readfile("qa194.tsp")    
+    filter_lst = filter_nodes(node_lst, cluster.region)
 
-filter_lst = []
-node_lst = readfile("qa194.tsp")    
-filter_lst = filter_nodes(node_lst, cluster.region)
+    tsp1 = TSP("qa194.tsp")
+    tsp2 = TSP("qa194.tsp")
+    tsp3 = TSP("qa194.tsp")
 
-tsp1 = TSP("qa194.tsp")
-tsp2 = TSP("qa194.tsp")
-tsp3 = TSP("qa194.tsp")
+    tsp1.node_lst = filter_lst[0]
+    tsp2.node_lst = filter_lst[1]
+    tsp3.node_lst = filter_lst[2]
 
-tsp1.node_lst = filter_lst[0]
-tsp2.node_lst = filter_lst[1]
-tsp3.node_lst = filter_lst[2]
+    tsp1.generate_population()
+    tsp2.generate_population()
+    tsp3.generate_population()
 
-tsp1.generate_population()
-tsp2.generate_population()
-tsp3.generate_population()
-
-for i in range(tsp1.no_generations):
-    tsp1.make_children()
-    tsp1.mutate()
-    tsp1.survival_of_the_fitest()
-    print("TSP1: Generation No.: ", i+1)
-    print("Best Fitness Soo Far: ", tsp1.best_so_far[-1])
-
-for i in range(tsp2.no_generations):
-    tsp2.make_children()
-    tsp2.mutate()
-    tsp2.survival_of_the_fitest()
-    print("TSP2: Generation: ", i+1)
-    print("Best Fitness Soo Far: ", tsp2.best_so_far[-1])
-
-for i in range(tsp3.no_generations):
-    tsp3.make_children()
-    tsp3.mutate()
-    tsp3.survival_of_the_fitest()
-    print("TSP3: Generation: ", i+1)
-    print("Best Fitness Soo Far: ", tsp3.best_so_far[-1])
-
-final = TSP("qa194.tsp")
-final.node_lst = tsp1.bestpath.sequence +tsp2.bestpath.sequence + tsp3.bestpath.sequence
-final.generate_population()
-for i in range(final.no_generations):
-    final.make_children()
-    final.mutate()
-    final.survival_of_the_fitest()
-    print("Final: Generation: ", i+1)
-    print("Best Fitness Soo Far: ", final.best_so_far[-1])
+    for i in tqdm(range(tsp1.no_generations)):
+        tsp1.make_children()
+        tsp1.mutate()
+        tsp1.survival_of_the_fitest()
+        if i % 100 == 0:
+            print("TSP1: Generation No.: ", i+1)
+            print("Best Fitness Soo Far: ", tsp1.best_so_far[-1])
+        # add loading bar for this loop
 
 
-# for i in tsp1.bestpath.sequence:
-#     plt.scatter(i.x, i.y, color='red')
-# for i in tsp2.bestpath.sequence:
-#     plt.scatter(i.x, i.y, color='blue')
-# for i in tsp3.bestpath.sequence:
-#     plt.scatter(i.x, i.y, color='green')
+    for i in tqdm(range(tsp2.no_generations)):
+        tsp2.make_children()
+        tsp2.mutate()
+        tsp2.survival_of_the_fitest()
+        if i % 100 == 0:
+            print("TSP2: Generation No.: ", i+1)
+            print("Best Fitness Soo Far: ", tsp2.best_so_far[-1])
 
-# # connect the dots in the best path
-# for i in range(len(tsp1.bestpath.sequence)-1):
-#     plt.plot([tsp1.bestpath.sequence[i].x, tsp1.bestpath.sequence[i+1].x], [tsp1.bestpath.sequence[i].y, tsp1.bestpath.sequence[i+1].y], color='red')
-# for i in range(len(tsp2.bestpath.sequence)-1):
-#     plt.plot([tsp2.bestpath.sequence[i].x, tsp2.bestpath.sequence[i+1].x], [tsp2.bestpath.sequence[i].y, tsp2.bestpath.sequence[i+1].y], color='blue')
-# for i in range(len(tsp3.bestpath.sequence)-1):
-#     plt.plot([tsp3.bestpath.sequence[i].x, tsp3.bestpath.sequence[i+1].x], [tsp3.bestpath.sequence[i].y, tsp3.bestpath.sequence[i+1].y], color='green')
+    for i in tqdm(range(tsp3.no_generations)):
+        tsp3.make_children()
+        tsp3.mutate()
+        tsp3.survival_of_the_fitest()
+        if i % 100 == 0:
+            print("TSP3: Generation: ", i+1)
+            print("Best Fitness Soo Far: ", tsp3.best_so_far[-1])
 
-# plt.show()
+    final = TSP("qa194.tsp")
+    lst = []
+    lst.append(tsp1.bestpath.sequence)
+    lst.append(tsp2.bestpath.sequence)
+    lst.append(tsp3.bestpath.sequence)
+
+    final.node_lst = tsp1.bestpath.sequence +tsp2.bestpath.sequence + tsp3.bestpath.sequence
+    perm = list(permutations(lst))
+    for x in perm:
+        temp = []
+        for y in x:
+            temp += y
+        final.population.append(chromosome(temp))
+        temp = []
+
+    for i in tqdm(range(final.no_generations)):
+        final.make_children()
+        final.mutate()
+        final.survival_of_the_fitest()
+        if i % 100 == 0:
+            print("Final: Generation: ", i+1)
+            print("Best Fitness Soo Far: ", final.bestpath.fitness)
+
+
+    # for i in tsp1.bestpath.sequence:
+    #     plt.scatter(i.x, i.y, color='red')
+    # for i in tsp2.bestpath.sequence:
+    #     plt.scatter(i.x, i.y, color='blue')
+    # for i in tsp3.bestpath.sequence:
+    #     plt.scatter(i.x, i.y, color='green')
+
+    # # connect the dots in the best path
+    # for i in range(len(tsp1.bestpath.sequence)-1):
+    #     plt.plot([tsp1.bestpath.sequence[i].x, tsp1.bestpath.sequence[i+1].x], [tsp1.bestpath.sequence[i].y, tsp1.bestpath.sequence[i+1].y], color='red')
+    # for i in range(len(tsp2.bestpath.sequence)-1):
+    #     plt.plot([tsp2.bestpath.sequence[i].x, tsp2.bestpath.sequence[i+1].x], [tsp2.bestpath.sequence[i].y, tsp2.bestpath.sequence[i+1].y], color='blue')
+    # for i in range(len(tsp3.bestpath.sequence)-1):
+    #     plt.plot([tsp3.bestpath.sequence[i].x, tsp3.bestpath.sequence[i+1].x], [tsp3.bestpath.sequence[i].y, tsp3.bestpath.sequence[i+1].y], color='green')
+
+    # plt.show()
+
+if __name__ == "__main__":
+    main()
